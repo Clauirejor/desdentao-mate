@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0e1a">
+<title>Desdentao Matemático</title>
+<style>
+:root{
+  --night-1:#05070d;
+  --night-2:#0a0e1a;
+  --night-3:#121a2e;
+  --moon:#e8eef7;
+  --moon-glow:#a8c0e0;
+  --fire:#ff6a1a;
+  --fire-bright:#ffb547;
+  --plasma:#6fe0ff;
+  --plasma-bright:#b3f0ff;
+  --ok:#7bdc8a;
+  --bad:#ff5a6a;
+  --scale:#1c2540;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{
+  font-family:'Trebuchet MS','Comic Sans MS',system-ui,sans-serif;
+  background:radial-gradient(ellipse at 30% 20%,#1a2547 0%,var(--night-2) 40%,var(--night-1) 100%);
+  color:var(--moon);
+  position:fixed;inset:0;
+  touch-action:manipulation;
+}
+/* Estrellas de fondo */
+.stars{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.star{position:absolute;background:#fff;border-radius:50%;animation:twinkle 3s infinite ease-in-out}
+@keyframes twinkle{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
+.moon{
+  position:absolute;top:5%;right:8%;width:90px;height:90px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fff,var(--moon-glow) 70%,#7a96bd);
+  box-shadow:0 0 60px rgba(168,192,224,.6),0 0 120px rgba(168,192,224,.3);
+  z-index:0;
+}
+/* Pantallas */
+.screen{
+  position:absolute;inset:0;display:none;flex-direction:column;
+  padding:env(safe-area-inset-top,16px) env(safe-area-inset-right,16px) env(safe-area-inset-bottom,16px) env(safe-area-inset-left,16px);
+  z-index:1;
+}
+.screen.active{display:flex;animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Header común */
+.header{
+  display:flex;align-items:center;gap:12px;padding:14px 18px;
+  background:linear-gradient(180deg,rgba(18,26,46,.95),rgba(18,26,46,.6));
+  border-radius:0 0 24px 24px;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+.back-btn{
+  width:48px;height:48px;border-radius:14px;border:none;
+  background:linear-gradient(145deg,#2a3556,#1a2240);
+  color:var(--moon);font-size:28px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 0 #0e1428,inset 0 1px 0 rgba(255,255,255,.1);
+  transition:transform .1s;
+  position:relative;z-index:10;
+  flex-shrink:0;
+  padding:0;
+  line-height:1;
+  font-family:Arial,sans-serif;
+}
+.back-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #0e1428;background:linear-gradient(145deg,#3a4670,#2a3050)}
+.header-title{flex:1;font-size:20px;font-weight:bold;text-shadow:0 2px 8px rgba(111,224,255,.3)}
+.score-pill{
+  display:flex;align-items:center;gap:6px;
+  background:linear-gradient(145deg,#ff8c2a,#d44a0a);
+  padding:8px 14px;border-radius:20px;font-weight:bold;
+  box-shadow:0 0 16px rgba(255,106,26,.5),inset 0 1px 0 rgba(255,255,255,.3);
+}
+
+/* Botón de altavoz flotante para silenciar/activar el vídeo del dragón */
+.sound-btn{
+  position:fixed;top:14px;right:14px;
+  width:44px;height:44px;border-radius:50%;border:none;
+  background:linear-gradient(145deg,#2a3556,#1a2240);
+  color:var(--moon);font-size:20px;cursor:pointer;z-index:1000;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 0 #0e1428,inset 0 1px 0 rgba(255,255,255,.1);
+  transition:transform .1s;
+  padding:0;line-height:1;
+}
+.sound-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #0e1428}
+.sound-btn.muted{opacity:.6}
+
+/* ==================== PANTALLA INICIO ==================== */
+#screen-welcome{justify-content:center;align-items:center;padding:24px}
+.welcome-content{text-align:center;max-width:480px;width:100%;animation:floatIn 1s ease}
+@keyframes floatIn{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+
+.title-main{
+  font-family:'Georgia','Trebuchet MS',serif;
+  font-size:clamp(36px,9vw,56px);
+  font-weight:900;
+  letter-spacing:2px;
+  background:linear-gradient(180deg,#fff 0%,var(--plasma-bright) 40%,var(--plasma) 70%,#4ab8d8 100%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 24px rgba(111,224,255,.5));
+  margin-bottom:8px;
+}
+.title-sub{
+  font-size:18px;letter-spacing:6px;text-transform:uppercase;
+  color:var(--moon-glow);opacity:.8;margin-bottom:28px;
+}
+.dragon-hero{
+  width:min(280px,60vw);height:min(280px,60vw);margin:0 auto 24px;
+  animation:dragonFloat 4s ease-in-out infinite;
+}
+@keyframes dragonFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-14px) rotate(2deg)}}
+
+.player-section{margin-top:16px}
+.player-select{
+  background:rgba(18,26,46,.7);border-radius:22px;padding:18px;
+  border:2px solid rgba(111,224,255,.2);
+  margin-bottom:16px;
+}
+.player-list{display:flex;flex-direction:column;gap:10px;max-height:240px;overflow-y:auto}
+.player-item{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;
+  background:linear-gradient(145deg,#1c2540,#141a30);
+  border-radius:16px;cursor:pointer;border:2px solid transparent;
+  transition:all .2s;
+}
+.player-item:active{transform:scale(.97)}
+.player-item.empty{justify-content:center;color:var(--moon-glow);font-style:italic;opacity:.6;padding:20px}
+.player-avatar{
+  width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(145deg,var(--plasma),#4ab8d8);
+  display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold;color:var(--night-1);
+  flex-shrink:0;
+  box-shadow:0 0 12px rgba(111,224,255,.5);
+}
+.player-name{flex:1;font-size:18px;font-weight:bold;text-align:left}
+.player-total{font-size:14px;color:var(--fire-bright);font-weight:bold}
+.player-delete{
+  width:32px;height:32px;border-radius:50%;border:none;
+  background:rgba(255,90,106,.2);color:var(--bad);font-size:16px;cursor:pointer;
+}
+
+.new-player{display:flex;gap:8px;margin-top:14px}
+.new-player input{
+  flex:1;padding:14px 16px;border-radius:14px;border:2px solid rgba(111,224,255,.3);
+  background:rgba(5,7,13,.7);color:var(--moon);font-size:16px;font-family:inherit;
+  outline:none;
+}
+.new-player input:focus{border-color:var(--plasma)}
+.btn-primary{
+  padding:14px 22px;border:none;border-radius:14px;cursor:pointer;
+  background:linear-gradient(145deg,var(--fire-bright),var(--fire));
+  color:#2a1505;font-weight:bold;font-size:16px;font-family:inherit;
+  box-shadow:0 4px 0 #a83a08,0 0 20px rgba(255,106,26,.4);
+  transition:transform .1s;
+}
+.btn-primary:active{transform:translateY(2px);box-shadow:0 2px 0 #a83a08}
+
+/* ==================== PANTALLA MUNDOS ==================== */
+#screen-worlds{overflow-y:auto;padding-bottom:30px}
+.worlds-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;
+  padding:18px;
+}
+.world-card{
+  aspect-ratio:1;border-radius:24px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:14px;text-align:center;position:relative;overflow:hidden;
+  border:2px solid rgba(255,255,255,.08);
+  transition:transform .15s;
+  box-shadow:0 6px 20px rgba(0,0,0,.4);
+}
+.world-card:active{transform:scale(.96)}
+.world-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.2),transparent 60%);
+  pointer-events:none;
+}
+.world-icon{font-size:48px;margin-bottom:6px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5))}
+.world-name{font-size:15px;font-weight:bold;line-height:1.1;text-shadow:0 2px 4px rgba(0,0,0,.6)}
+.world-stars{
+  position:absolute;bottom:8px;right:10px;
+  font-size:12px;font-weight:bold;background:rgba(0,0,0,.5);
+  padding:3px 8px;border-radius:10px;
+}
+
+/* Colores por mundo */
+.w-suma{background:linear-gradient(145deg,#2ecc71,#16a085)}
+.w-resta{background:linear-gradient(145deg,#e74c3c,#c0392b)}
+.w-mult{background:linear-gradient(145deg,#9b59b6,#6c3483)}
+.w-div{background:linear-gradient(145deg,#f39c12,#d35400)}
+.w-frac{background:linear-gradient(145deg,#3498db,#1f5f8b)}
+.w-pot{background:linear-gradient(145deg,#e91e63,#ad1457)}
+.w-ecu{background:linear-gradient(145deg,#1abc9c,#117864)}
+
+/* ==================== PANTALLA NIVELES ==================== */
+#screen-levels{overflow-y:auto;padding-bottom:30px}
+.levels-intro{padding:18px 22px;text-align:center}
+.levels-intro h2{font-size:24px;margin-bottom:6px}
+.levels-intro p{color:var(--moon-glow);opacity:.8;font-size:14px}
+.levels-list{padding:8px 18px 30px;display:flex;flex-direction:column;gap:14px;position:relative}
+.levels-list::before{
+  content:'';position:absolute;left:50%;top:30px;bottom:30px;width:4px;
+  background:linear-gradient(180deg,var(--plasma),transparent);
+  transform:translateX(-50%);border-radius:2px;opacity:.4;z-index:0;
+}
+.level-card{
+  display:flex;align-items:center;gap:14px;padding:16px 18px;
+  background:linear-gradient(145deg,#1c2540,#141a30);
+  border-radius:20px;cursor:pointer;position:relative;z-index:1;
+  border:2px solid rgba(111,224,255,.15);
+  transition:transform .15s;
+}
+.level-card:active{transform:scale(.98)}
+.level-card.locked{opacity:.4;cursor:not-allowed;filter:grayscale(.6)}
+.level-card.perfect{border-color:var(--fire-bright);box-shadow:0 0 20px rgba(255,181,71,.3)}
+.level-num{
+  width:56px;height:56px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:900;flex-shrink:0;
+  background:linear-gradient(145deg,var(--plasma),#4ab8d8);
+  color:var(--night-1);
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.2),0 0 16px rgba(111,224,255,.4);
+}
+.level-card.locked .level-num{background:linear-gradient(145deg,#3a4660,#22293e);color:#5a6680;box-shadow:none}
+.level-card.perfect .level-num{background:linear-gradient(145deg,var(--fire-bright),var(--fire))}
+.level-info{flex:1}
+.level-title{font-size:17px;font-weight:bold;margin-bottom:2px}
+.level-desc{font-size:13px;color:var(--moon-glow);opacity:.7}
+.level-score{text-align:right;font-size:13px}
+.level-score-val{font-size:20px;font-weight:bold;color:var(--fire-bright)}
+.level-score-perfect{color:var(--ok);font-size:11px;font-weight:bold}
+
+/* ==================== PANTALLA JUEGO ==================== */
+#screen-game{padding:0}
+.game-top{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:16px 18px;background:rgba(10,14,26,.8);
+  backdrop-filter:blur(8px);
+}
+.game-meta{display:flex;gap:14px;align-items:center}
+.meta-item{
+  background:rgba(28,37,64,.8);padding:8px 14px;border-radius:14px;
+  font-size:13px;font-weight:bold;display:flex;align-items:center;gap:6px;
+}
+.progress-bar{
+  height:6px;background:rgba(28,37,64,.8);margin:0 18px;border-radius:3px;overflow:hidden;
+}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--plasma),var(--fire-bright));
+  transition:width .4s ease;border-radius:3px;
+  box-shadow:0 0 12px rgba(111,224,255,.6);
+}
+
+.game-area{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px;gap:24px;position:relative;
+}
+.dragon-game{
+  width:140px;height:140px;
+  animation:dragonHover 3s ease-in-out infinite;
+}
+@keyframes dragonHover{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.dragon-game.happy{animation:dragonHappy .6s ease}
+@keyframes dragonHappy{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.15) rotate(-8deg)}}
+.dragon-game.sad{animation:dragonSad .6s ease}
+@keyframes dragonSad{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(10px) rotate(-5deg)}75%{transform:translateY(10px) rotate(5deg)}}
+
+.problem-display{
+  font-family:'Georgia',serif;
+  font-size:clamp(36px,8vw,56px);
+  font-weight:900;
+  text-align:center;
+  padding:24px 32px;min-width:240px;
+  background:rgba(18,26,46,.8);
+  border:3px solid var(--plasma);
+  border-radius:24px;
+  box-shadow:0 0 40px rgba(111,224,255,.3),inset 0 0 20px rgba(111,224,255,.1);
+  letter-spacing:2px;
+}
+
+.answers-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  padding:16px;width:100%;max-width:520px;
+}
+.answer-btn{
+  padding:24px 16px;border:none;border-radius:20px;cursor:pointer;
+  font-family:'Georgia',serif;font-size:clamp(22px,5vw,30px);font-weight:bold;
+  background:linear-gradient(145deg,#2a3556,#1a2240);
+  color:var(--moon);
+  border:2px solid rgba(111,224,255,.3);
+  box-shadow:0 6px 0 #0e1428,inset 0 1px 0 rgba(255,255,255,.1);
+  transition:transform .1s;
+  min-height:80px;
+}
+.answer-btn:active{transform:translateY(3px);box-shadow:0 3px 0 #0e1428}
+.answer-btn.correct{
+  background:linear-gradient(145deg,var(--ok),#3a9a48);
+  border-color:#fff;
+  animation:correctPulse .5s ease;
+}
+.answer-btn.wrong{
+  background:linear-gradient(145deg,var(--bad),#a02030);
+  border-color:#fff;
+  animation:wrongShake .5s ease;
+}
+@keyframes correctPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes wrongShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+/* Feedback flotante */
+.feedback{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:64px;font-weight:900;font-family:'Georgia',serif;
+  pointer-events:none;z-index:100;
+  animation:feedbackPop 1s ease forwards;
+  text-shadow:0 4px 20px rgba(0,0,0,.8);
+}
+@keyframes feedbackPop{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
+  20%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}
+  80%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-80%) scale(1)}
+}
+.feedback.plus{color:var(--ok)}
+.feedback.minus{color:var(--bad)}
+
+/* ==================== PANTALLA FINAL ==================== */
+#screen-result{justify-content:center;align-items:center;padding:24px}
+.result-content{
+  text-align:center;max-width:420px;width:100%;
+  animation:resultIn .8s ease;
+}
+@keyframes resultIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+.result-icon{font-size:96px;margin-bottom:16px;animation:resultIconBounce 1s ease}
+@keyframes resultIconBounce{0%{transform:scale(0) rotate(-180deg)}60%{transform:scale(1.2) rotate(0)}100%{transform:scale(1) rotate(0)}}
+.result-title{font-size:32px;font-weight:900;margin-bottom:12px;font-family:'Georgia',serif}
+.result-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:24px 0;
+}
+.stat-box{
+  background:rgba(28,37,64,.7);border-radius:16px;padding:14px 8px;
+  border:2px solid rgba(111,224,255,.2);
+}
+.stat-val{font-size:28px;font-weight:900;color:var(--fire-bright)}
+.stat-label{font-size:11px;color:var(--moon-glow);text-transform:uppercase;letter-spacing:1px;opacity:.8}
+.result-buttons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+.btn-secondary{
+  padding:14px 22px;border:none;border-radius:14px;cursor:pointer;
+  background:linear-gradient(145deg,#3a4670,#222a48);
+  color:var(--moon);font-weight:bold;font-size:16px;font-family:inherit;
+  box-shadow:0 4px 0 #1a2040;
+  transition:transform .1s;
+}
+.btn-secondary:active{transform:translateY(2px);box-shadow:0 2px 0 #1a2040}
+
+.perfect-badge{
+  display:inline-block;
+  background:linear-gradient(145deg,var(--fire-bright),var(--fire));
+  color:#2a1505;font-weight:900;padding:8px 18px;border-radius:20px;
+  font-size:14px;letter-spacing:2px;margin-top:8px;
+  box-shadow:0 0 20px rgba(255,181,71,.6);
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+
+/* Confeti */
+.confetti{position:fixed;width:10px;height:10px;pointer-events:none;z-index:200;animation:confettiFall 2.5s linear forwards}
+@keyframes confettiFall{
+  0%{transform:translateY(-20px) rotate(0deg);opacity:1}
+  100%{transform:translateY(110vh) rotate(720deg);opacity:0}
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(111,224,255,.3);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- Botón flotante para silenciar/activar sonido del dragón -->
+<button class="sound-btn muted" id="sound-btn" onclick="toggleSound()" aria-label="Sonido">🔇</button>
+
+<!-- Estrellas y luna de fondo -->
+<div class="stars" id="stars"></div>
+<div class="moon"></div>
+
+<!-- ==================== PANTALLA: BIENVENIDA ==================== -->
+<div class="screen active" id="screen-welcome">
+  <div class="welcome-content">
+    <div class="dragon-hero" id="welcome-dragon"></div>
+    <div class="title-main">DESDENTAO</div>
+    <div class="title-sub">Matemático</div>
+
+    <div class="player-section">
+      <div class="player-select">
+        <div class="player-list" id="player-list"></div>
+        <div class="new-player">
+          <input type="text" id="new-player-input" placeholder="Nuevo jugador..." maxlength="20">
+          <button class="btn-primary" onclick="addPlayer()">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PANTALLA: MUNDOS ==================== -->
+<div class="screen" id="screen-worlds">
+  <div class="header">
+    <button class="back-btn" onclick="showScreen('welcome')">←</button>
+    <div class="header-title" id="worlds-title">Elige un mundo</div>
+    <div class="score-pill">🔥 <span id="worlds-score">0</span></div>
+  </div>
+  <div class="worlds-grid" id="worlds-grid"></div>
+</div>
+
+<!-- ==================== PANTALLA: NIVELES ==================== -->
+<div class="screen" id="screen-levels">
+  <div class="header">
+    <button class="back-btn" onclick="showScreen('worlds')">←</button>
+    <div class="header-title" id="levels-title">Niveles</div>
+    <div class="score-pill">🔥 <span id="levels-score">0</span></div>
+  </div>
+  <div class="levels-intro" id="levels-intro"></div>
+  <div class="levels-list" id="levels-list"></div>
+</div>
+
+<!-- ==================== PANTALLA: JUEGO ==================== -->
+<div class="screen" id="screen-game">
+  <div class="game-top">
+    <button class="back-btn" onclick="exitGame()">←</button>
+    <div class="game-meta">
+      <div class="meta-item">📝 <span id="game-progress">1/10</span></div>
+      <div class="meta-item">✨ <span id="game-points">0</span></div>
+      <div class="meta-item">❌ <span id="game-mistakes">0</span></div>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="game-area">
+    <div class="dragon-game" id="game-dragon"></div>
+    <div class="problem-display" id="problem-display">2 + 2 = ?</div>
+    <div class="answers-grid" id="answers-grid"></div>
+  </div>
+</div>
+
+<!-- ==================== PANTALLA: RESULTADO ==================== -->
+<div class="screen" id="screen-result">
+  <div class="result-content">
+    <div class="result-icon" id="result-icon">🐉</div>
+    <div class="result-title" id="result-title">¡Bien hecho!</div>
+    <div id="perfect-badge-container"></div>
+    <div class="result-stats">
+      <div class="stat-box">
+        <div class="stat-val" id="result-points">0</div>
+        <div class="stat-label">Puntos</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="result-correct">0</div>
+        <div class="stat-label">Aciertos</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="result-mistakes">0</div>
+        <div class="stat-label">Fallos</div>
+      </div>
+    </div>
+    <div id="result-record"></div>
+    <div class="result-buttons">
+      <button class="btn-secondary" onclick="showScreen('levels')">Niveles</button>
+      <button class="btn-primary" onclick="retryLevel()">Repetir</button>
+      <button class="btn-primary" onclick="nextLevel()" id="next-level-btn">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SVG del dragón Desdentao reutilizable -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="toothless" viewBox="0 0 200 200">
+      <!-- Sombra/aura plasma -->
+      <ellipse cx="100" cy="180" rx="60" ry="8" fill="rgba(111,224,255,.2)"/>
+
+      <!-- Cuerpo principal -->
+      <ellipse cx="100" cy="115" rx="55" ry="48" fill="#0a0e18"/>
+      <ellipse cx="100" cy="110" rx="50" ry="42" fill="#1a1f2e"/>
+
+      <!-- Alas detrás -->
+      <path d="M 50,100 Q 20,70 15,40 Q 35,75 55,90 Z" fill="#0a0e18" opacity=".85"/>
+      <path d="M 150,100 Q 180,70 185,40 Q 165,75 145,90 Z" fill="#0a0e18" opacity=".85"/>
+
+      <!-- Cabeza -->
+      <ellipse cx="100" cy="75" rx="42" ry="38" fill="#0a0e18"/>
+      <ellipse cx="100" cy="72" rx="38" ry="33" fill="#1a1f2e"/>
+
+      <!-- Orejas/protuberancias -->
+      <path d="M 70,45 Q 65,30 72,28 Q 78,40 78,52 Z" fill="#0a0e18"/>
+      <path d="M 130,45 Q 135,30 128,28 Q 122,40 122,52 Z" fill="#0a0e18"/>
+      <path d="M 60,55 Q 50,45 55,40 Q 65,48 68,58 Z" fill="#0a0e18"/>
+      <path d="M 140,55 Q 150,45 145,40 Q 135,48 132,58 Z" fill="#0a0e18"/>
+
+      <!-- Ojos grandes verdes (Desdentao) -->
+      <ellipse cx="83" cy="75" rx="11" ry="13" fill="#fff"/>
+      <ellipse cx="117" cy="75" rx="11" ry="13" fill="#fff"/>
+      <ellipse cx="83" cy="76" rx="9" ry="11" fill="#7fcc4f"/>
+      <ellipse cx="117" cy="76" rx="9" ry="11" fill="#7fcc4f"/>
+      <ellipse cx="83" cy="76" rx="3" ry="9" fill="#000"/>
+      <ellipse cx="117" cy="76" rx="3" ry="9" fill="#000"/>
+      <circle cx="80" cy="71" r="2" fill="#fff"/>
+      <circle cx="114" cy="71" r="2" fill="#fff"/>
+
+      <!-- Nariz/boca -->
+      <ellipse cx="100" cy="95" rx="5" ry="3" fill="#0a0e18"/>
+      <path d="M 92,100 Q 100,105 108,100" stroke="#0a0e18" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+      <!-- Pequeño brillo plasma -->
+      <circle cx="100" cy="110" r="4" fill="#6fe0ff" opacity=".6"/>
+    </symbol>
+  </defs>
+</svg>
+
+<script>
+// ==================== CONFIGURACIÓN ====================
+// Carpeta donde están los vídeos de Desdentao dentro del repositorio.
+// Debe terminar con "/". Si los pones en la raíz, deja: ''
+const DRAGON_FOLDER = 'videos/';
+
+// Lista de vídeos de Desdentao. Cada vez que se abre la app se elige
+// uno al azar. Añade aquí los nombres exactos de los vídeos que
+// subas a la carpeta. Recomendado MP4 con códec H.264 para máxima
+// compatibilidad con iPad y móviles.
+const DRAGON_VIDEOS = [
+  'desdentao1.mp4',
+  'desdentao2.mp4',
+  'desdentao3.mp4',
+  'desdentao4.mp4',
+  'desdentao5.mp4',
+];
+
+// Volumen del vídeo de Desdentao (0 a 1). Los navegadores exigen que el
+// vídeo arranque sin sonido y que el usuario interactúe antes de poder
+// activarlo, así que el sonido se enciende automáticamente al primer
+// toque en la pantalla.
+const DRAGON_VOLUME = 0.6;
+
+// Si DRAGON_VIDEOS está vacío o ninguno carga, se mostrará el
+// dragón SVG de respaldo que viene integrado en la app.
+
+// ==================== DATOS DE MUNDOS ====================
+const WORLDS = [
+  {id:'suma',name:'Sumas',icon:'➕',color:'w-suma',desc:'El comienzo del vuelo'},
+  {id:'resta',name:'Restas',icon:'➖',color:'w-resta',desc:'Aprendiendo a quitar'},
+  {id:'mult',name:'Multiplicar',icon:'✖️',color:'w-mult',desc:'Las tablas mágicas'},
+  {id:'div',name:'Dividir',icon:'➗',color:'w-div',desc:'Reparto justo'},
+  {id:'frac',name:'Fracciones',icon:'½',color:'w-frac',desc:'Partes del todo'},
+  {id:'pot',name:'Potencias',icon:'x²',color:'w-pot',desc:'El poder del cuadrado'},
+  {id:'ecu',name:'Ecuaciones',icon:'x=?',color:'w-ecu',desc:'Resolver el misterio'},
+];
+
+const LEVELS_PER_WORLD = 10;
+const PROBLEMS_PER_LEVEL = 10;
+
+// ==================== ESTADO ====================
+let state = {
+  players: {},          // {nombre: {scores: {worldId_level: {best, perfect}}, total: n}}
+  currentPlayer: null,
+  currentWorld: null,
+  currentLevel: null,
+  game: null,           // estado de la partida en curso
+};
+
+// ==================== ALMACENAMIENTO ====================
+const STORAGE_KEY = 'desdentao_v1';
+
+function save(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      players: state.players,
+      currentPlayer: state.currentPlayer,
+    }));
+  }catch(e){console.error('save error',e)}
+}
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const data = JSON.parse(raw);
+      state.players = data.players || {};
+      state.currentPlayer = data.currentPlayer || null;
+    }
+  }catch(e){console.error('load error',e)}
+}
+
+// ==================== UTILIDADES ====================
+function rand(min, max){return Math.floor(Math.random()*(max-min+1))+min}
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function ensurePlayer(name){
+  if(!state.players[name]){
+    state.players[name] = {scores:{}, total:0};
+  }
+}
+
+function getScoreKey(worldId, level){return `${worldId}_${level}`}
+
+function getLevelScore(playerName, worldId, level){
+  const p = state.players[playerName];
+  if(!p) return null;
+  return p.scores[getScoreKey(worldId, level)] || null;
+}
+
+function isLevelUnlocked(playerName, worldId, level){
+  if(level === 1) return true;
+  // El nivel anterior debe tener al menos un score guardado (es decir, jugado)
+  return getLevelScore(playerName, worldId, level - 1) !== null;
+}
+
+function getWorldTotalScore(playerName, worldId){
+  const p = state.players[playerName];
+  if(!p) return 0;
+  let sum = 0;
+  for(let i=1;i<=LEVELS_PER_WORLD;i++){
+    const s = p.scores[getScoreKey(worldId, i)];
+    if(s) sum += s.best;
+  }
+  return sum;
+}
+
+function getPlayerTotal(playerName){
+  const p = state.players[playerName];
+  if(!p) return 0;
+  let sum = 0;
+  Object.values(p.scores).forEach(s=>sum+=s.best);
+  return sum;
+}
+
+// ==================== ESTRELLAS DE FONDO ====================
+function createStars(){
+  const c = document.getElementById('stars');
+  for(let i=0;i<50;i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random()*2+1;
+    s.style.width = s.style.height = size+'px';
+    s.style.left = Math.random()*100+'%';
+    s.style.top = Math.random()*100+'%';
+    s.style.animationDelay = Math.random()*3+'s';
+    c.appendChild(s);
+  }
+}
+
+// Dragones SVG en los placeholders
+// Escoge un vídeo aleatorio de la lista al iniciar la app.
+// Si no hay lista o falla la carga, usa el dragón SVG de respaldo.
+let SESSION_DRAGON = null;
+
+function pickRandomDragon(){
+  if(!DRAGON_VIDEOS || DRAGON_VIDEOS.length === 0) return null;
+  const idx = Math.floor(Math.random() * DRAGON_VIDEOS.length);
+  return DRAGON_FOLDER + DRAGON_VIDEOS[idx];
+}
+
+// Estado del sonido. Arranca silenciado porque los navegadores lo exigen,
+// pero al primer toque del usuario se intenta activar automáticamente.
+let SOUND_ON = false;
+
+function createDragonVideo(src){
+  const v = document.createElement('video');
+  v.src = src;
+  v.autoplay = true;
+  v.loop = true;
+  v.muted = !SOUND_ON;
+  v.volume = DRAGON_VOLUME;
+  v.playsInline = true;
+  if(!SOUND_ON) v.setAttribute('muted','');
+  v.setAttribute('playsinline','');
+  v.setAttribute('webkit-playsinline','');
+  v.controls = false;
+  v.disablePictureInPicture = true;
+  v.style.width = '100%';
+  v.style.height = '100%';
+  v.style.objectFit = 'contain';
+  v.style.filter = 'drop-shadow(0 8px 24px rgba(111,224,255,.4))';
+  v.style.pointerEvents = 'none';
+  return v;
+}
+
+function getAllDragonVideos(){
+  return document.querySelectorAll('#welcome-dragon video, #game-dragon video');
+}
+
+function applySoundState(){
+  const btn = document.getElementById('sound-btn');
+  if(btn){
+    btn.textContent = SOUND_ON ? '🔊' : '🔇';
+    btn.classList.toggle('muted', !SOUND_ON);
+  }
+  getAllDragonVideos().forEach(v=>{
+    v.muted = !SOUND_ON;
+    v.volume = DRAGON_VOLUME;
+    const p = v.play(); if(p) p.catch(()=>{});
+  });
+}
+
+function toggleSound(){
+  SOUND_ON = !SOUND_ON;
+  applySoundState();
+}
+
+// Al primer toque/click del usuario, activamos sonido automáticamente
+// (los navegadores ya lo permiten una vez ha habido interacción).
+function setupAutoUnmute(){
+  const tryUnmute = ()=>{
+    if(!SOUND_ON){
+      SOUND_ON = true;
+      applySoundState();
+    }
+    document.removeEventListener('pointerdown', tryUnmute);
+    document.removeEventListener('touchstart', tryUnmute);
+    document.removeEventListener('click', tryUnmute);
+  };
+  document.addEventListener('pointerdown', tryUnmute, {once:false});
+  document.addEventListener('touchstart', tryUnmute, {once:false});
+  document.addEventListener('click', tryUnmute, {once:false});
+}
+
+function injectDragons(){
+  SESSION_DRAGON = pickRandomDragon();
+  ['welcome-dragon','game-dragon'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(!SESSION_DRAGON){
+      // No hay vídeos configurados → SVG directamente
+      el.innerHTML = '<svg viewBox="0 0 200 200" width="100%" height="100%"><use href="#toothless"/></svg>';
+      return;
+    }
+    const video = createDragonVideo(SESSION_DRAGON + '?v=' + Date.now());
+    video.addEventListener('loadeddata', ()=>{
+      el.innerHTML = '';
+      el.appendChild(video);
+      // Forzar play (algunos navegadores bloquean autoplay hasta interacción)
+      const playPromise = video.play();
+      if(playPromise){ playPromise.catch(()=>{}); }
+    });
+    video.addEventListener('error', ()=>{
+      // Si este vídeo falla, intenta con otro distinto una vez,
+      // y si tampoco, cae al SVG.
+      const alternatives = DRAGON_VIDEOS.filter(n => DRAGON_FOLDER+n !== SESSION_DRAGON);
+      if(alternatives.length > 0){
+        const next = DRAGON_FOLDER + alternatives[Math.floor(Math.random()*alternatives.length)];
+        SESSION_DRAGON = next;
+        const retry = createDragonVideo(next + '?v=' + Date.now());
+        retry.addEventListener('loadeddata', ()=>{
+          el.innerHTML = '';
+          el.appendChild(retry);
+          const p = retry.play(); if(p) p.catch(()=>{});
+        });
+        retry.addEventListener('error', ()=>{
+          el.innerHTML = '<svg viewBox="0 0 200 200" width="100%" height="100%"><use href="#toothless"/></svg>';
+        });
+      }else{
+        el.innerHTML = '<svg viewBox="0 0 200 200" width="100%" height="100%"><use href="#toothless"/></svg>';
+      }
+    });
+  });
+}
+
+// En iOS, los vídeos pueden pausarse al cambiar de pestaña. Al volver
+// a la app, intentamos reanudar los vídeos del dragón.
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden){
+    document.querySelectorAll('.dragon-hero video, .dragon-game video').forEach(v=>{
+      const p = v.play(); if(p) p.catch(()=>{});
+    });
+  }
+});
+
+// ==================== NAVEGACIÓN ====================
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  if(name==='welcome') renderPlayers();
+  if(name==='worlds') renderWorlds();
+  if(name==='levels') renderLevels();
+}
+
+// ==================== JUGADORES ====================
+function renderPlayers(){
+  const list = document.getElementById('player-list');
+  const names = Object.keys(state.players);
+  if(names.length === 0){
+    list.innerHTML = '<div class="player-item empty">Crea un jugador para empezar 🐲</div>';
+    return;
+  }
+  list.innerHTML = names.map(name=>{
+    const total = getPlayerTotal(name);
+    const initial = name.charAt(0).toUpperCase();
+    return `
+      <div class="player-item" onclick="selectPlayer('${name.replace(/'/g,"\\'")}')">
+        <div class="player-avatar">${initial}</div>
+        <div class="player-name">${escapeHtml(name)}</div>
+        <div class="player-total">🔥 ${total}</div>
+        <button class="player-delete" onclick="event.stopPropagation();deletePlayer('${name.replace(/'/g,"\\'")}')">×</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+function addPlayer(){
+  const input = document.getElementById('new-player-input');
+  const name = input.value.trim();
+  if(!name) return;
+  if(state.players[name]){alert('Ya existe un jugador con ese nombre');return}
+  ensurePlayer(name);
+  input.value = '';
+  save();
+  renderPlayers();
+}
+
+function deletePlayer(name){
+  if(!confirm(`¿Borrar a ${name} y todas sus puntuaciones?`)) return;
+  delete state.players[name];
+  if(state.currentPlayer === name) state.currentPlayer = null;
+  save();
+  renderPlayers();
+}
+
+function selectPlayer(name){
+  state.currentPlayer = name;
+  save();
+  showScreen('worlds');
+}
+
+// ==================== MUNDOS ====================
+function renderWorlds(){
+  document.getElementById('worlds-title').textContent = state.currentPlayer || 'Mundos';
+  document.getElementById('worlds-score').textContent = getPlayerTotal(state.currentPlayer);
+  const grid = document.getElementById('worlds-grid');
+  grid.innerHTML = WORLDS.map(w=>{
+    let perfects = 0;
+    for(let i=1;i<=LEVELS_PER_WORLD;i++){
+      const s = getLevelScore(state.currentPlayer, w.id, i);
+      if(s && s.perfect) perfects++;
+    }
+    return `
+      <div class="world-card ${w.color}" onclick="selectWorld('${w.id}')">
+        <div class="world-icon">${w.icon}</div>
+        <div class="world-name">${w.name}</div>
+        <div class="world-stars">⭐ ${perfects}/${LEVELS_PER_WORLD}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectWorld(id){
+  state.currentWorld = id;
+  showScreen('levels');
+}
+
+// ==================== NIVELES ====================
+function renderLevels(){
+  const world = WORLDS.find(w=>w.id===state.currentWorld);
+  document.getElementById('levels-title').textContent = world.name;
+  document.getElementById('levels-score').textContent = getPlayerTotal(state.currentPlayer);
+  document.getElementById('levels-intro').innerHTML = `
+    <h2>${world.icon} ${world.name}</h2>
+    <p>${world.desc}</p>
+  `;
+  const list = document.getElementById('levels-list');
+  let html = '';
+  for(let i=1;i<=LEVELS_PER_WORLD;i++){
+    const unlocked = isLevelUnlocked(state.currentPlayer, state.currentWorld, i);
+    const score = getLevelScore(state.currentPlayer, state.currentWorld, i);
+    const isPerfect = score && score.perfect;
+    const desc = getLevelDescription(state.currentWorld, i);
+    html += `
+      <div class="level-card ${!unlocked?'locked':''} ${isPerfect?'perfect':''}" onclick="${unlocked?`startLevel(${i})`:''}">
+        <div class="level-num">${unlocked?i:'🔒'}</div>
+        <div class="level-info">
+          <div class="level-title">Nivel ${i}</div>
+          <div class="level-desc">${desc}</div>
+        </div>
+        <div class="level-score">
+          ${score?`<div class="level-score-val">${score.best}</div>`:''}
+          ${isPerfect?`<div class="level-score-perfect">⭐ PERFECTO</div>`:''}
+        </div>
+      </div>
+    `;
+  }
+  list.innerHTML = html;
+}
+
+// ==================== DESCRIPCIONES DE NIVELES ====================
+function getLevelDescription(worldId, level){
+  const descs = {
+    suma:['Hasta 10','Hasta 20','Hasta 50','Hasta 100','Con llevadas','3 cifras','3 sumandos','Decenas redondas','Hasta 1000','Sumas largas'],
+    resta:['Hasta 10','Hasta 20','Hasta 50','Hasta 100','Con llevadas','3 cifras','Resultado >0','Decenas','Hasta 1000','Restas grandes'],
+    mult:['Tablas 2-5','Tablas 6-9','Por 10, 100','×1 cifra','×2 cifras fácil','×2 cifras','×3 cifras','Por 0 y 1','Múltiplos','Mezcladas'],
+    div:['÷2 y ÷5','÷3 y ÷4','÷6 a ÷9','Por 10','÷1 cifra','÷ exactas','Mitades','Tercios','Cuartos','Mezcladas'],
+    frac:['Mitades','Cuartos','Sumar igual','Restar igual','Comparar','Equivalentes','Simplificar','Sumar fácil','Mixtas','De un total'],
+    pot:['Cuadrados 1-5','Cuadrados 6-10','Cubos 1-3','Base 2','Base 3','Base 10','x⁰ y x¹','Pequeñas','Mezcladas','Avanzadas'],
+    ecu:['x+a=b fácil','x-a=b','a·x=b','x+a=b grande','x/a=b','2x+a=b','3x-a=b','Más difíciles','2 incógnitas','3 incógnitas'],
+  };
+  return descs[worldId][level-1] || '';
+}
+
+// ==================== GENERADORES DE PROBLEMAS ====================
+function generateProblem(worldId, level){
+  const gen = GENERATORS[worldId][level-1];
+  return gen();
+}
+
+// Cada generador devuelve {q: string, a: number|string, options?: [string]}
+const GENERATORS = {
+  suma: [
+    ()=>{const a=rand(1,5),b=rand(1,5);return mkProblem(`${a} + ${b}`, a+b)},
+    ()=>{const a=rand(1,10),b=rand(1,10);return mkProblem(`${a} + ${b}`, a+b)},
+    ()=>{const a=rand(10,25),b=rand(5,25);return mkProblem(`${a} + ${b}`, a+b)},
+    ()=>{const a=rand(20,50),b=rand(10,50);return mkProblem(`${a} + ${b}`, a+b)},
+    ()=>{const a=rand(15,49),b=rand(15,49);return mkProblem(`${a} + ${b}`, a+b)},
+    ()=>{const a=rand(100,500),b=rand(50,400);return mkProblem(`${a} + ${b}`, a+b)},
+    ()=>{const a=rand(10,30),b=rand(10,30),c=rand(10,30);return mkProblem(`${a} + ${b} + ${c}`, a+b+c)},
+    ()=>{const a=rand(1,9)*10,b=rand(1,9)*10;return mkProblem(`${a} + ${b}`, a+b)},
+    ()=>{const a=rand(200,800),b=rand(100,600);return mkProblem(`${a} + ${b}`, a+b)},
+    ()=>{const a=rand(100,400),b=rand(100,400),c=rand(50,300);return mkProblem(`${a} + ${b} + ${c}`, a+b+c)},
+  ],
+  resta: [
+    ()=>{const a=rand(5,10),b=rand(1,a);return mkProblem(`${a} - ${b}`, a-b)},
+    ()=>{const a=rand(10,20),b=rand(1,a);return mkProblem(`${a} - ${b}`, a-b)},
+    ()=>{const a=rand(20,50),b=rand(5,a);return mkProblem(`${a} - ${b}`, a-b)},
+    ()=>{const a=rand(50,100),b=rand(10,a);return mkProblem(`${a} - ${b}`, a-b)},
+    ()=>{const a=rand(30,80),b=rand(15,a-5);return mkProblem(`${a} - ${b}`, a-b)},
+    ()=>{const a=rand(200,500),b=rand(50,a);return mkProblem(`${a} - ${b}`, a-b)},
+    ()=>{const a=rand(50,200),b=rand(20,a);return mkProblem(`${a} - ${b}`, a-b)},
+    ()=>{const a=rand(5,9)*10,b=rand(1,a/10-1)*10;return mkProblem(`${a} - ${b}`, a-b)},
+    ()=>{const a=rand(500,1000),b=rand(100,a);return mkProblem(`${a} - ${b}`, a-b)},
+    ()=>{const a=rand(300,900),b=rand(100,a-50);return mkProblem(`${a} - ${b}`, a-b)},
+  ],
+  mult: [
+    ()=>{const a=rand(2,5),b=rand(1,10);return mkProblem(`${a} × ${b}`, a*b)},
+    ()=>{const a=rand(6,9),b=rand(1,10);return mkProblem(`${a} × ${b}`, a*b)},
+    ()=>{const a=rand(1,20),b=Math.random()<.5?10:100;return mkProblem(`${a} × ${b}`, a*b)},
+    ()=>{const a=rand(2,9),b=rand(11,20);return mkProblem(`${a} × ${b}`, a*b)},
+    ()=>{const a=rand(11,15),b=rand(2,9);return mkProblem(`${a} × ${b}`, a*b)},
+    ()=>{const a=rand(12,30),b=rand(11,25);return mkProblem(`${a} × ${b}`, a*b)},
+    ()=>{const a=rand(100,300),b=rand(2,9);return mkProblem(`${a} × ${b}`, a*b)},
+    ()=>{const a=rand(1,20),b=Math.random()<.5?0:1;return mkProblem(`${a} × ${b}`, a*b)},
+    ()=>{const base=rand(3,7),m=rand(2,9);return mkProblem(`${base} × ${m}`, base*m)},
+    ()=>{const a=rand(11,25),b=rand(5,15);return mkProblem(`${a} × ${b}`, a*b)},
+  ],
+  div: [
+    ()=>{const q=rand(1,10),d=Math.random()<.5?2:5;return mkProblem(`${q*d} ÷ ${d}`, q)},
+    ()=>{const q=rand(1,10),d=Math.random()<.5?3:4;return mkProblem(`${q*d} ÷ ${d}`, q)},
+    ()=>{const q=rand(1,10),d=rand(6,9);return mkProblem(`${q*d} ÷ ${d}`, q)},
+    ()=>{const q=rand(1,30);return mkProblem(`${q*10} ÷ 10`, q)},
+    ()=>{const q=rand(2,15),d=rand(2,9);return mkProblem(`${q*d} ÷ ${d}`, q)},
+    ()=>{const q=rand(5,20),d=rand(2,9);return mkProblem(`${q*d} ÷ ${d}`, q)},
+    ()=>{const n=rand(2,30)*2;return mkProblem(`${n} ÷ 2`, n/2)},
+    ()=>{const n=rand(2,20)*3;return mkProblem(`${n} ÷ 3`, n/3)},
+    ()=>{const n=rand(2,20)*4;return mkProblem(`${n} ÷ 4`, n/4)},
+    ()=>{const q=rand(5,25),d=rand(3,9);return mkProblem(`${q*d} ÷ ${d}`, q)},
+  ],
+  frac: [
+    ()=>{const n=rand(1,5)*2;return mkProblem(`Mitad de ${n}`, n/2)},
+    ()=>{const n=rand(1,5)*4;return mkProblem(`Un cuarto de ${n}`, n/4)},
+    // sumas mismas denominador
+    ()=>{const d=rand(3,6),a=rand(1,d-1),b=rand(1,d-a);return mkProblemFrac(`${a}/${d} + ${b}/${d}`, `${a+b}/${d}`)},
+    ()=>{const d=rand(3,8),a=rand(2,d-1),b=rand(1,a-1);return mkProblemFrac(`${a}/${d} - ${b}/${d}`, `${a-b}/${d}`)},
+    // comparar
+    ()=>{
+      const opts = [['1/2','2/4'],['1/3','2/6'],['3/4','6/8'],['1/4','2/8'],['2/3','4/6']];
+      const [a,b] = opts[rand(0,opts.length-1)];
+      return mkProblemFrac(`${a} y ${b} son...`, 'iguales', ['iguales','distintas','no sé','imposible']);
+    },
+    // equivalentes: cuál es equivalente a x
+    ()=>{
+      const base=[[1,2],[1,3],[1,4],[2,3],[3,4]][rand(0,4)];
+      const k=rand(2,4);
+      const correct = `${base[0]*k}/${base[1]*k}`;
+      const wrong1 = `${base[0]*k+1}/${base[1]*k}`;
+      const wrong2 = `${base[0]*k}/${base[1]*k+1}`;
+      const wrong3 = `${base[0]+k}/${base[1]+k}`;
+      return mkProblemFrac(`Equivalente a ${base[0]}/${base[1]}`, correct, [correct,wrong1,wrong2,wrong3]);
+    },
+    // simplificar
+    ()=>{
+      const opts=[['2/4','1/2'],['3/6','1/2'],['4/8','1/2'],['2/6','1/3'],['3/9','1/3'],['4/6','2/3'],['6/8','3/4'],['4/10','2/5']];
+      const [q,a] = opts[rand(0,opts.length-1)];
+      return mkProblemFrac(`Simplifica ${q}`, a);
+    },
+    // sumar distinto denominador fácil (denominadores múltiplos)
+    ()=>{
+      const d1=rand(2,4), d2=d1*2;
+      const a=rand(1,d1-1), b=rand(1,d2-1);
+      const num = a*2 + b;
+      return mkProblemFrac(`${a}/${d1} + ${b}/${d2}`, `${num}/${d2}`);
+    },
+    // mixtas: 1 + 1/2 etc.
+    ()=>{
+      const w=rand(1,3),d=rand(2,5),n=rand(1,d-1);
+      return mkProblemFrac(`${w} + ${n}/${d}`, `${w*d+n}/${d}`);
+    },
+    // fracción de un total
+    ()=>{
+      const total=rand(2,5)*rand(2,4);
+      const d=[2,3,4,5][rand(0,3)];
+      const validTotal = d * rand(2,6);
+      const n=rand(1,d-1);
+      return mkProblem(`${n}/${d} de ${validTotal}`, (validTotal/d)*n);
+    },
+  ],
+  pot: [
+    ()=>{const a=rand(1,5);return mkProblem(`${a}²`, a*a)},
+    ()=>{const a=rand(6,10);return mkProblem(`${a}²`, a*a)},
+    ()=>{const a=rand(1,3);return mkProblem(`${a}³`, a*a*a)},
+    ()=>{const e=rand(2,5);return mkProblem(`2^${e}`, Math.pow(2,e))},
+    ()=>{const e=rand(2,4);return mkProblem(`3^${e}`, Math.pow(3,e))},
+    ()=>{const e=rand(1,4);return mkProblem(`10^${e}`, Math.pow(10,e))},
+    ()=>{
+      const a=rand(2,9);
+      if(Math.random()<.5) return mkProblem(`${a}⁰`, 1);
+      return mkProblem(`${a}¹`, a);
+    },
+    ()=>{const a=rand(2,6),e=rand(2,3);return mkProblem(`${a}^${e}`, Math.pow(a,e))},
+    ()=>{
+      // mezcladas fáciles
+      const which=rand(0,2);
+      if(which===0){const a=rand(2,7);return mkProblem(`${a}²`, a*a)}
+      if(which===1){const a=rand(2,4);return mkProblem(`${a}³`, a*a*a)}
+      const e=rand(2,4);return mkProblem(`2^${e}`, Math.pow(2,e));
+    },
+    ()=>{
+      // potencias un poco más
+      const a=rand(2,5),e=rand(3,4);
+      return mkProblem(`${a}^${e}`, Math.pow(a,e));
+    },
+  ],
+  ecu: [
+    // Nivel 1: x + a = b
+    ()=>{const a=rand(1,9),x=rand(1,9);return mkProblem(`x + ${a} = ${a+x}`, x)},
+    // Nivel 2: x - a = b
+    ()=>{const a=rand(1,9),x=rand(2,15);return mkProblem(`x - ${a} = ${x-a}`, x)},
+    // Nivel 3: a·x = b
+    ()=>{const a=rand(2,9),x=rand(2,9);return mkProblem(`${a}x = ${a*x}`, x)},
+    // Nivel 4: x + a = b (más grande)
+    ()=>{const a=rand(10,30),x=rand(5,40);return mkProblem(`x + ${a} = ${a+x}`, x)},
+    // Nivel 5: x/a = b
+    ()=>{const a=rand(2,6),x=rand(2,8)*a;return mkProblem(`x ÷ ${a} = ${x/a}`, x)},
+    // Nivel 6: 2x + a = b
+    ()=>{const a=rand(1,9),x=rand(2,9);return mkProblem(`2x + ${a} = ${2*x+a}`, x)},
+    // Nivel 7: 3x - a = b
+    ()=>{const a=rand(1,9),x=rand(2,8);return mkProblem(`3x - ${a} = ${3*x-a}`, x)},
+    // Nivel 8: ax + b = c
+    ()=>{const a=rand(2,5),b=rand(1,9),x=rand(2,7);return mkProblem(`${a}x + ${b} = ${a*x+b}`, x)},
+    // Nivel 9: dos incógnitas fáciles - sistema con respuesta x+y
+    ()=>{
+      // Sistema: x + y = S, x - y = D  → preguntamos x
+      const x=rand(3,9),y=rand(1,x-1);
+      const s=x+y, d=x-y;
+      return mkProblem(`x+y=${s}, x-y=${d}. x=?`, x);
+    },
+    // Nivel 10: tres incógnitas - sistema simple
+    ()=>{
+      // x+y+z=S, x=a, y=b → z
+      const x=rand(1,5),y=rand(1,5),z=rand(1,5);
+      const s=x+y+z;
+      return mkProblem(`x+y+z=${s}, x=${x}, y=${y}. z=?`, z);
+    },
+  ],
+};
+
+function mkProblem(q, a){
+  const ans = a;
+  const opts = generateNumericOptions(ans);
+  // Si la pregunta ya contiene '=', no añadimos '= ?'
+  const display = q.includes('=') ? q : q+' = ?';
+  return {q:display, a:ans, options:opts.map(String)};
+}
+
+function mkProblemFrac(q, correctStr, customOptions){
+  const display = q.includes('=') ? q : q+' = ?';
+  if(customOptions){
+    return {q:display, a:correctStr, options:shuffle(customOptions)};
+  }
+  // Generar opciones falsas para fracciones tipo "n/d"
+  const [n,d] = correctStr.split('/').map(Number);
+  const opts = new Set([correctStr]);
+  let tries=0;
+  while(opts.size<4 && tries<20){
+    tries++;
+    const variants = [
+      `${n+1}/${d}`,
+      `${Math.max(1,n-1)}/${d}`,
+      `${n}/${d+1}`,
+      `${n}/${Math.max(2,d-1)}`,
+      `${n+1}/${d+1}`,
+      `${d}/${n||1}`,
+    ];
+    opts.add(variants[rand(0,variants.length-1)]);
+  }
+  return {q:display, a:correctStr, options:shuffle([...opts]).slice(0,4)};
+}
+
+function generateNumericOptions(correct){
+  const opts = new Set([correct]);
+  const range = Math.max(2, Math.floor(Math.abs(correct)*0.3) + 2);
+  let tries = 0;
+  while(opts.size < 4 && tries < 50){
+    tries++;
+    const delta = rand(1, range) * (Math.random()<.5?-1:1);
+    const candidate = correct + delta;
+    if(candidate >= 0 || correct < 0) opts.add(candidate);
+  }
+  // backup por si no llegamos a 4
+  let n = correct + 1;
+  while(opts.size < 4){
+    opts.add(n);
+    n++;
+  }
+  return shuffle([...opts]);
+}
+
+// ==================== JUEGO ====================
+function startLevel(level){
+  state.currentLevel = level;
+  state.game = {
+    problems: [],
+    currentIdx: 0,
+    points: 0,
+    correct: 0,
+    mistakes: 0,
+    locked: false,
+  };
+  // pre-generar problemas
+  for(let i=0;i<PROBLEMS_PER_LEVEL;i++){
+    state.game.problems.push(generateProblem(state.currentWorld, level));
+  }
+  showScreen('game');
+  renderProblem();
+}
+
+function renderProblem(){
+  const g = state.game;
+  const p = g.problems[g.currentIdx];
+  document.getElementById('game-progress').textContent = `${g.currentIdx+1}/${PROBLEMS_PER_LEVEL}`;
+  document.getElementById('game-points').textContent = g.points;
+  document.getElementById('game-mistakes').textContent = g.mistakes;
+  document.getElementById('progress-fill').style.width = ((g.currentIdx)/PROBLEMS_PER_LEVEL*100)+'%';
+  document.getElementById('problem-display').textContent = p.q;
+  const grid = document.getElementById('answers-grid');
+  grid.innerHTML = p.options.map((o,i)=>`<button class="answer-btn" data-val="${escapeHtml(String(o))}" onclick="answer(this, '${escapeHtml(String(o)).replace(/'/g,"\\'")}')">${escapeHtml(String(o))}</button>`).join('');
+  g.locked = false;
+}
+
+function answer(btn, value){
+  const g = state.game;
+  if(g.locked) return;
+  g.locked = true;
+  const correct = String(g.problems[g.currentIdx].a);
+  const dragon = document.getElementById('game-dragon');
+  if(value === correct){
+    btn.classList.add('correct');
+    g.points += 2;
+    g.correct++;
+    dragon.classList.add('happy');
+    showFeedback('+2','plus');
+    setTimeout(()=>{
+      dragon.classList.remove('happy');
+      advance();
+    },800);
+  }else{
+    btn.classList.add('wrong');
+    g.points -= 1;
+    g.mistakes++;
+    dragon.classList.add('sad');
+    showFeedback('-1','minus');
+    // marcar también la correcta
+    document.querySelectorAll('.answer-btn').forEach(b=>{
+      if(b.dataset.val === correct) b.classList.add('correct');
+    });
+    setTimeout(()=>{
+      dragon.classList.remove('sad');
+      advance();
+    },1200);
+  }
+}
+
+function showFeedback(text, type){
+  const f = document.createElement('div');
+  f.className = 'feedback '+type;
+  f.textContent = text;
+  document.querySelector('.game-area').appendChild(f);
+  setTimeout(()=>f.remove(),1000);
+}
+
+function advance(){
+  const g = state.game;
+  g.currentIdx++;
+  if(g.currentIdx >= PROBLEMS_PER_LEVEL){
+    finishLevel();
+  }else{
+    renderProblem();
+  }
+}
+
+function finishLevel(){
+  const g = state.game;
+  let totalPoints = g.points;
+  const isPerfect = g.mistakes === 0;
+  if(isPerfect) totalPoints += 10;
+
+  // Guardar mejor puntuación
+  const key = getScoreKey(state.currentWorld, state.currentLevel);
+  const p = state.players[state.currentPlayer];
+  const prev = p.scores[key];
+  const isNewRecord = !prev || totalPoints > prev.best;
+  if(isNewRecord){
+    p.scores[key] = {best: totalPoints, perfect: isPerfect};
+  }else if(isPerfect && !prev.perfect){
+    // marcar perfecto aunque no supere puntuación
+    p.scores[key].perfect = true;
+  }
+  save();
+
+  // Pantalla final
+  document.getElementById('result-points').textContent = totalPoints;
+  document.getElementById('result-correct').textContent = g.correct;
+  document.getElementById('result-mistakes').textContent = g.mistakes;
+  const badgeC = document.getElementById('perfect-badge-container');
+  badgeC.innerHTML = isPerfect ? '<div class="perfect-badge">⭐ PERFECTO +10</div>' : '';
+  const icon = document.getElementById('result-icon');
+  const title = document.getElementById('result-title');
+  if(isPerfect){
+    icon.textContent = '🏆';
+    title.textContent = '¡PERFECTO!';
+    launchConfetti();
+  }else if(g.correct >= 7){
+    icon.textContent = '🐉';
+    title.textContent = '¡Muy bien!';
+  }else if(g.correct >= 4){
+    icon.textContent = '✨';
+    title.textContent = 'Buen intento';
+  }else{
+    icon.textContent = '💪';
+    title.textContent = '¡Sigue practicando!';
+  }
+  const rec = document.getElementById('result-record');
+  rec.innerHTML = isNewRecord ? '<div style="color:var(--fire-bright);font-weight:bold;margin-top:8px">🔥 ¡Nuevo récord!</div>' : '';
+
+  // Mostrar/ocultar botón siguiente nivel
+  const nextBtn = document.getElementById('next-level-btn');
+  if(state.currentLevel < LEVELS_PER_WORLD){
+    nextBtn.style.display = '';
+  }else{
+    nextBtn.style.display = 'none';
+  }
+
+  showScreen('result');
+}
+
+function retryLevel(){
+  startLevel(state.currentLevel);
+}
+
+function nextLevel(){
+  if(state.currentLevel < LEVELS_PER_WORLD){
+    startLevel(state.currentLevel + 1);
+  }
+}
+
+function exitGame(){
+  // Sale de la partida actual y vuelve a niveles. El progreso del nivel
+  // en curso se descarta (la puntuación guardada solo se actualiza al
+  // completar los 10 problemas).
+  state.game = null;
+  showScreen('levels');
+}
+
+function launchConfetti(){
+  const colors = ['#6fe0ff','#ffb547','#7bdc8a','#ff6a1a','#fff'];
+  for(let i=0;i<60;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random()*100+'vw';
+    c.style.background = colors[rand(0,colors.length-1)];
+    c.style.animationDelay = (Math.random()*0.5)+'s';
+    c.style.animationDuration = (1.8 + Math.random()*1.2)+'s';
+    if(Math.random()<.5) c.style.borderRadius = '50%';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),3500);
+  }
+}
+
+// ==================== INIT ====================
+function init(){
+  createStars();
+  injectDragons();
+  load();
+  setupAutoUnmute();
+  // Enter para añadir jugador
+  document.getElementById('new-player-input').addEventListener('keydown', e=>{
+    if(e.key==='Enter') addPlayer();
+  });
+  renderPlayers();
+}
+
+window.addEventListener('DOMContentLoaded', init);
+
+// Prevenir zoom de pellizco accidental en iPad
+document.addEventListener('gesturestart', e=>e.preventDefault());
+document.addEventListener('dblclick', e=>e.preventDefault());
+</script>
+</body>
+</html>
