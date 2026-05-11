@@ -1,0 +1,20 @@
+{
+  "name": "Desdentao Matemático",
+  "short_name": "Desdentao",
+  "description": "Aprende matemáticas con Desdentao",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icono.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
